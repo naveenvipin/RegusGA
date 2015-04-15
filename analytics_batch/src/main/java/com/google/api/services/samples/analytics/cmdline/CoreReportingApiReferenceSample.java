@@ -38,6 +38,7 @@ import org.json.JSONException;
 import org.mortbay.util.ajax.JSON;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
@@ -146,8 +147,7 @@ public class CoreReportingApiReferenceSample {
   private static Credential authorize() throws Exception {
     // load client secrets
     GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(
-        JSON_FACTORY, new InputStreamReader(
-            HelloAnalyticsApiSample.class.getResourceAsStream("/client_secrets.json")));
+        JSON_FACTORY, new InputStreamReader(new FileInputStream(System.getProperty("user.home") + "/client_secrets.json")));
     if (clientSecrets.getDetails().getClientId().startsWith("Enter")
         || clientSecrets.getDetails().getClientSecret().startsWith("Enter ")) {
       System.out.println(
