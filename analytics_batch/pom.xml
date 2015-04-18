@@ -67,7 +67,7 @@
           </execution>
         </executions>
         <configuration>
-          <mainClass>com.google.api.services.samples.analytics.cmdline.HelloAnalyticsApiSample</mainClass>
+          <mainClass>com.google.api.services.samples.analytics.cmdline.CoreReportingApiReferenceSample</mainClass>
           <systemProperties>
             <systemProperty>
               <key>java.util.logging.config.file</key>
