@@ -230,7 +230,7 @@ public class CoreReportingApiReferenceSample {
             startDate, // Start date.
             endDate, // End date.
             "ga:visits,ga:users") // Metrics.
-            .setDimensions("ga:dimension11")
+            .setDimensions("ga:dimension11,ga:dimension2")
 //        .setSort("-ga:visits")
             .setFilters("ga:dimension11!=(Non-Company Visitor)")
             .setMaxResults(500);
@@ -395,10 +395,12 @@ public class CoreReportingApiReferenceSample {
             System.out.format("%s", value);
           }*/
           String demandBaseId = rowValues.get(0);
-          String visits = rowValues.get(1);
-          String users = rowValues.get(2);
+          String clientId = rowValues.get(1);
+          String visits = rowValues.get(2);
+          String users = rowValues.get(3);
           HashMap<Object, Object> map = new HashMap<Object, Object>();
           map.put("demandbase_sid", demandBaseId);
+          map.put("clientId", clientId);
           map.put("visits", visits);
           map.put("users", users);
           BasicDBObject objectToInsert = new BasicDBObject(map);
