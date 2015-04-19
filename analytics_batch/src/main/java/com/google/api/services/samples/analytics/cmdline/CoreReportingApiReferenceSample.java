@@ -18,7 +18,6 @@ import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInsta
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.http.HttpTransport;
@@ -32,12 +31,10 @@ import com.google.api.services.analytics.model.GaData;
 import com.google.api.services.analytics.model.GaData.ColumnHeaders;
 import com.google.api.services.analytics.model.GaData.ProfileInfo;
 import com.google.api.services.analytics.model.GaData.Query;
-import com.google.common.collect.Maps;
 import com.mongodb.*;
 import org.json.JSONException;
 import org.mortbay.util.ajax.JSON;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -74,6 +71,8 @@ public class CoreReportingApiReferenceSample {
   /** Directory to store user credentials. */
   private static final java.io.File DATA_STORE_DIR =
       new java.io.File(System.getProperty("user.home"), ".store/analytics_sample");
+  private static final String startDate = "2015-03-07";
+  private static final String endDate = "2015-03-08";
 
   /**
    * Global instance of the {@link DataStoreFactory}. The best practice is to make it a single
@@ -116,23 +115,37 @@ public class CoreReportingApiReferenceSample {
         mongo = new MongoClient( "localhost" , 27017 );
         regus_analytics_db = mongo.getDB("regus_analytics");
       }
-      DBCollection regus_ga = regus_analytics_db.getCollection("ga");
+      DBCollection regus_visited_companies = regus_analytics_db.getCollection("ga");
+      DBCollection regus_visit_attributes = regus_analytics_db.getCollection("visit_attrs");
 
       GaData gaData;
       do {
-        gaData = executeDataQuery(analytics, TABLE_ID, startIndex);
+        gaData = executeDataQueryForVisitedComapnies(analytics, TABLE_ID, startIndex);
+        insertVisitedCompaniesData(gaData, regus_visited_companies);
 
-        printReportInfo(gaData);
-        printProfileInfo(gaData);
-        printQueryInfo(gaData);
-        printPaginationInfo(gaData);
-        printTotalsForAllResults(gaData);
-        printColumnHeaders(gaData);
-        printDataTable(gaData, regus_ga);
+//        printReportInfo(gaData);
+//        printProfileInfo(gaData);
+//        printQueryInfo(gaData);
+//        printPaginationInfo(gaData);
+//        printTotalsForAllResults(gaData);
+//        printColumnHeaders(gaData);
         startIndex = gaData.getQuery().getStartIndex() + gaData.getQuery().getMaxResults();
       } while (gaData.getNextLink() != null && !gaData.getNextLink().isEmpty());
 
 
+      startIndex = 0;
+      do {
+        gaData = executeDataQueryForVisitAttributes(analytics, TABLE_ID, startIndex);
+        insertVisitAttributesData(gaData, regus_visit_attributes);
+
+//        printReportInfo(gaData);
+//        printProfileInfo(gaData);
+//        printQueryInfo(gaData);
+//        printPaginationInfo(gaData);
+//        printTotalsForAllResults(gaData);
+//        printColumnHeaders(gaData);
+        startIndex = gaData.getQuery().getStartIndex() + gaData.getQuery().getMaxResults();
+      } while (gaData.getNextLink() != null && !gaData.getNextLink().isEmpty());
 
 
     } catch (GoogleJsonResponseException e) {
@@ -187,18 +200,37 @@ public class CoreReportingApiReferenceSample {
    * Returns the top 25 organic search keywords and traffic sources by visits. The Core Reporting
    * API is used to retrieve this data.
    *
+   * @param dimension
    * @param analytics the Analytics service object used to access the API.
    * @param tableId the table ID from which to retrieve data.
    * @param startIndex
    * @return the response from the API.
    * @throws IOException if an API error occured.
    */
-  private static GaData executeDataQuery(Analytics analytics, String tableId, int startIndex) throws IOException {
+  private static GaData executeDataQueryForVisitedComapnies(Analytics analytics, String tableId, int startIndex) throws IOException {
     Analytics.Data.Ga.Get get = analytics.data().ga().get(tableId, // Table Id.
-            "2015-03-07", // Start date.
-            "2015-03-08", // End date.
+            startDate, // Start date.
+            endDate, // End date.
             "ga:visits") // Metrics.
             .setDimensions("ga:dimension20")
+//        .setSort("-ga:visits")
+            .setFilters("ga:dimension11!=(Non-Company Visitor)")
+            .setMaxResults(500);
+
+    if (startIndex > 0) {
+      get.setStartIndex(startIndex);
+    }
+
+    return get.execute();
+
+  }
+
+  private static GaData executeDataQueryForVisitAttributes(Analytics analytics, String tableId, int startIndex) throws IOException {
+    Analytics.Data.Ga.Get get = analytics.data().ga().get(tableId, // Table Id.
+            startDate, // Start date.
+            endDate, // End date.
+            "ga:visits,ga:users") // Metrics.
+            .setDimensions("ga:dimension11")
 //        .setSort("-ga:visits")
             .setFilters("ga:dimension11!=(Non-Company Visitor)")
             .setMaxResults(500);
@@ -309,11 +341,11 @@ public class CoreReportingApiReferenceSample {
    * Prints all the rows of data returned by the API.
    *
    * @param gaData the data returned from the API.
-   * @param regus_ga
+   * @param collection
    */
-  private static void printDataTable(GaData gaData, DBCollection regus_ga) throws JSONException {
+  private static void insertVisitedCompaniesData(GaData gaData, DBCollection collection) throws JSONException {
     if (gaData.getTotalResults() > 0) {
-      System.out.println("Data Table:");
+      System.out.println("Data Table: " + collection);
 
       // Print the column names.
       //for (ColumnHeaders header : gaData.getColumnHeaders()) {
@@ -331,15 +363,49 @@ public class CoreReportingApiReferenceSample {
         HashMap<Object, Object> map = new HashMap<Object, Object>();
         map.put("demandbase_sid", dbObject.get("demandbase_sid"));
         BasicDBObject objectToRemove = new BasicDBObject(map);
-        DBObject andRemove = regus_ga.findAndRemove(objectToRemove);
+        DBObject andRemove = collection.findAndRemove(objectToRemove);
         if (andRemove == null) {
           dbObject.put("firstVisitDate", new SimpleDateFormat("yyyy/MM/dd").format(new Date()));
         } else {
           dbObject.put("firstVisitDate", andRemove.get("firstVisitDate"));
         }
 //        System.out.println(andRemove);
-        regus_ga.insert(dbObject);
+        collection.insert(dbObject);
 //        System.out.println();
+      }
+    } else {
+      System.out.println("No data");
+    }
+  }
+
+  private static void insertVisitAttributesData(GaData gaData, DBCollection collection) throws JSONException {
+    if (gaData.getTotalResults() > 0) {
+      System.out.println("Data Table:" + collection);
+
+      // Print the column names.
+      //for (ColumnHeaders header : gaData.getColumnHeaders()) {
+      //System.out.format("%-32s", header.getName());
+      //}
+//      System.out.println();
+
+      // Print the rows of data.
+      if (!gaData.getContainsSampledData()) {
+        for (List<String> rowValues : gaData.getRows()) {
+          /*for (String value : rowValues) {
+            System.out.format("%s", value);
+          }*/
+          String demandBaseId = rowValues.get(0);
+          String visits = rowValues.get(1);
+          String users = rowValues.get(2);
+          HashMap<Object, Object> map = new HashMap<Object, Object>();
+          map.put("demandbase_sid", demandBaseId);
+          map.put("visits", visits);
+          map.put("users", users);
+          BasicDBObject objectToInsert = new BasicDBObject(map);
+          collection.insert(objectToInsert);
+        }
+      } else {
+        System.out.println(" Excluding analytics data since it has sample data");
       }
     } else {
       System.out.println("No data");
