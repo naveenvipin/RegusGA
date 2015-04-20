@@ -75,6 +75,8 @@ public class CoreReportingApiReferenceSample {
      */
     private static final java.io.File DATA_STORE_DIR =
             new java.io.File(System.getProperty("user.home"), ".store/analytics_sample");
+    private static final String VISIT_ATTRIBUTES_METRICS = "ga:visits,ga:users,ga:pageviews,ga:sessionDuration";
+    private static final String VISIT_ATTRIBUTES_DIMENSIONS = "ga:dimension11,ga:dimension2,ga:dimension3,ga:pagePath,ga:source,ga:medium";
     private static Date startDate = DateUtils.addDays(new Date(), -1); //new SimpleDateFormat("yyyy-MM-dd").format(DateUtils.addDays(new Date(), -1));
     private static Date endDate = DateUtils.addDays(new Date(), -1);
 
@@ -214,8 +216,8 @@ public class CoreReportingApiReferenceSample {
         Analytics.Data.Ga.Get get = analytics.data().ga().get(tableId, // Table Id.
                 new SimpleDateFormat("yyyy-MM-dd").format(d), // Start date.
                 new SimpleDateFormat("yyyy-MM-dd").format(d), // End date.
-                "ga:visits,ga:users") // Metrics.
-                .setDimensions("ga:dimension11,ga:dimension2,ga:dimension3,ga:pagePath,ga:source,ga:medium")
+                VISIT_ATTRIBUTES_METRICS) // Metrics.
+                .setDimensions(VISIT_ATTRIBUTES_DIMENSIONS)
 //        .setSort("-ga:visits")
                 .setFilters("ga:dimension11!=(Non-Company Visitor)")
                 .setMaxResults(5000);
@@ -359,8 +361,7 @@ public class CoreReportingApiReferenceSample {
         if (gaData.getTotalResults() > 0) {
             System.out.println("Data Table:" + collection);
 
-            List<String> columns = Lists.newArrayList("ga:dimension11", "ga:dimension2", "ga:dimension3", "ga:pagePath", "ga:source", "ga:medium", "ga:visits", "ga:users");
-
+            String[] columns = (VISIT_ATTRIBUTES_METRICS + "," + VISIT_ATTRIBUTES_DIMENSIONS).split(",");
             HashMap<String, Integer> columnLookUp = new HashMap<String, Integer>();
             List<ColumnHeaders> columnHeaders = gaData.getColumnHeaders();
             for (String column : columns) {
@@ -381,6 +382,9 @@ public class CoreReportingApiReferenceSample {
                     String medium = rowValues.get(columnLookUp.get("ga:medium"));
                     String visits = rowValues.get(columnLookUp.get("ga:visits"));
                     String users = rowValues.get(columnLookUp.get("ga:users"));
+//                    String pageViews = rowValues.get(columnLookUp.get("ga:pageviews"));
+//                    String sessionDuration = rowValues.get(columnLookUp.get("ga:sessionDuration"));
+
 
                     HashMap<Object, Object> map = new HashMap<Object, Object>();
                     map.put("demandbase_sid", demandBaseId);
@@ -390,6 +394,8 @@ public class CoreReportingApiReferenceSample {
                     map.put("medium", medium);
                     map.put("visits", visits);
                     map.put("users", users);
+//                    map.put("pageViews", pageViews);
+//                    map.put("sessionDuration", sessionDuration);
                     map.put("date", new SimpleDateFormat("yyyy/MM/dd").format(d));
                     BasicDBObject objectToInsert = new BasicDBObject(map);
                     collection.insert(objectToInsert);
