@@ -196,17 +196,6 @@ public class CoreReportingApiReferenceSample {
         APPLICATION_NAME).build();
   }
 
-  /**
-   * Returns the top 25 organic search keywords and traffic sources by visits. The Core Reporting
-   * API is used to retrieve this data.
-   *
-   * @param dimension
-   * @param analytics the Analytics service object used to access the API.
-   * @param tableId the table ID from which to retrieve data.
-   * @param startIndex
-   * @return the response from the API.
-   * @throws IOException if an API error occured.
-   */
   private static GaData executeDataQueryForVisitedComapnies(Analytics analytics, String tableId, int startIndex) throws IOException {
     Analytics.Data.Ga.Get get = analytics.data().ga().get(tableId, // Table Id.
             startDate, // Start date.
@@ -215,7 +204,7 @@ public class CoreReportingApiReferenceSample {
             .setDimensions("ga:dimension20")
 //        .setSort("-ga:visits")
             .setFilters("ga:dimension11!=(Non-Company Visitor)")
-            .setMaxResults(500);
+            .setMaxResults(5000);
 
     if (startIndex > 0) {
       get.setStartIndex(startIndex);
@@ -230,10 +219,10 @@ public class CoreReportingApiReferenceSample {
             startDate, // Start date.
             endDate, // End date.
             "ga:visits,ga:users") // Metrics.
-            .setDimensions("ga:dimension11,ga:dimension2")
+            .setDimensions("ga:dimension11,ga:dimension2,ga:dimension3,ga:pagePath,ga:source,ga:medium")
 //        .setSort("-ga:visits")
             .setFilters("ga:dimension11!=(Non-Company Visitor)")
-            .setMaxResults(500);
+            .setMaxResults(5000);
 
     if (startIndex > 0) {
       get.setStartIndex(startIndex);
@@ -347,17 +336,7 @@ public class CoreReportingApiReferenceSample {
     if (gaData.getTotalResults() > 0) {
       System.out.println("Data Table: " + collection);
 
-      // Print the column names.
-      //for (ColumnHeaders header : gaData.getColumnHeaders()) {
-        //System.out.format("%-32s", header.getName());
-      //}
-//      System.out.println();
-
-      // Print the rows of data.
       for (List<String> rowValues : gaData.getRows()) {
-        /*for (String value : rowValues) {
-          System.out.format("%s", value);
-        }*/
         DBObject dbObject = new BasicDBObject((Map)JSON.parse(rowValues.get(0)));
         dbObject.removeField("ip");
         HashMap<Object, Object> map = new HashMap<Object, Object>();
@@ -369,9 +348,7 @@ public class CoreReportingApiReferenceSample {
         } else {
           dbObject.put("firstVisitDate", andRemove.get("firstVisitDate"));
         }
-//        System.out.println(andRemove);
         collection.insert(dbObject);
-//        System.out.println();
       }
     } else {
       System.out.println("No data");
@@ -382,25 +359,21 @@ public class CoreReportingApiReferenceSample {
     if (gaData.getTotalResults() > 0) {
       System.out.println("Data Table:" + collection);
 
-      // Print the column names.
-      //for (ColumnHeaders header : gaData.getColumnHeaders()) {
-      //System.out.format("%-32s", header.getName());
-      //}
-//      System.out.println();
-
-      // Print the rows of data.
       if (!gaData.getContainsSampledData()) {
         for (List<String> rowValues : gaData.getRows()) {
-          /*for (String value : rowValues) {
-            System.out.format("%s", value);
-          }*/
           String demandBaseId = rowValues.get(0);
           String clientId = rowValues.get(1);
-          String visits = rowValues.get(2);
-          String users = rowValues.get(3);
+          String pagePath = rowValues.get(2);
+          String source = rowValues.get(3);
+          String medium = rowValues.get(4);
+          String visits = rowValues.get(5);
+          String users = rowValues.get(6);
           HashMap<Object, Object> map = new HashMap<Object, Object>();
           map.put("demandbase_sid", demandBaseId);
           map.put("clientId", clientId);
+          map.put("pagePath", pagePath);
+          map.put("source", source);
+          map.put("medium", medium);
           map.put("visits", visits);
           map.put("users", users);
           BasicDBObject objectToInsert = new BasicDBObject(map);
