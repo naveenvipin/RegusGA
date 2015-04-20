@@ -31,6 +31,7 @@ import com.google.api.services.analytics.model.GaData;
 import com.google.api.services.analytics.model.GaData.ColumnHeaders;
 import com.google.api.services.analytics.model.GaData.ProfileInfo;
 import com.google.api.services.analytics.model.GaData.Query;
+import com.google.common.collect.Lists;
 import com.mongodb.*;
 import org.apache.commons.lang3.time.DateUtils;
 import org.json.JSONException;
@@ -358,15 +359,29 @@ public class CoreReportingApiReferenceSample {
         if (gaData.getTotalResults() > 0) {
             System.out.println("Data Table:" + collection);
 
+            List<String> columns = Lists.newArrayList("ga:dimension11", "ga:dimension2", "ga:dimension3", "ga:pagePath", "ga:source", "ga:medium", "ga:visits", "ga:users");
+
+            HashMap<String, Integer> columnLookUp = new HashMap<String, Integer>();
+            List<ColumnHeaders> columnHeaders = gaData.getColumnHeaders();
+            for (String column : columns) {
+                for (int i=0; i< columnHeaders.size(); i++) {
+                    if (columnHeaders.get(i).getName().equals(column)) {
+                        columnLookUp.put(column, i);
+                        break;
+                    }
+                }
+            }
+
             if (!gaData.getContainsSampledData()) {
                 for (List<String> rowValues : gaData.getRows()) {
-                    String demandBaseId = rowValues.get(0);
-                    String clientId = rowValues.get(1);
-                    String pagePath = rowValues.get(2);
-                    String source = rowValues.get(3);
-                    String medium = rowValues.get(4);
-                    String visits = rowValues.get(5);
-                    String users = rowValues.get(6);
+                    String demandBaseId = rowValues.get(columnLookUp.get("ga:dimension11"));
+                    String clientId = rowValues.get(columnLookUp.get("ga:dimension2"));
+                    String pagePath = rowValues.get(columnLookUp.get("ga:pagePath"));
+                    String source = rowValues.get(columnLookUp.get("ga:source"));
+                    String medium = rowValues.get(columnLookUp.get("ga:medium"));
+                    String visits = rowValues.get(columnLookUp.get("ga:visits"));
+                    String users = rowValues.get(columnLookUp.get("ga:users"));
+
                     HashMap<Object, Object> map = new HashMap<Object, Object>();
                     map.put("demandbase_sid", demandBaseId);
                     map.put("clientId", clientId);
