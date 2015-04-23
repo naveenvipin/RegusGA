@@ -123,6 +123,7 @@ public class CoreReportingApiReferenceSample {
 
             DBCollection regus_visited_companies = regus_analytics_db.getCollection("ga");
             DBCollection regus_visit_attributes = regus_analytics_db.getCollection("visit_attrs");
+            DBCollection centerMapping = regus_analytics_db.getCollection("center_mapping");
 
             GaData gaData;
 
@@ -140,7 +141,7 @@ public class CoreReportingApiReferenceSample {
                 do {
                     System.out.println("Executing data query for visit attributes for date: " + d);
                     gaData = executeDataQueryForVisitAttributes(analytics, TABLE_ID, startIndex, d);
-                    insertVisitAttributesData(gaData, regus_visit_attributes, d);
+                    insertVisitAttributesData(gaData, regus_visit_attributes, d, centerMapping);
 
                     startIndex = gaData.getQuery().getStartIndex() + gaData.getQuery().getMaxResults();
                 } while (gaData.getNextLink() != null && !gaData.getNextLink().isEmpty());
@@ -357,7 +358,7 @@ public class CoreReportingApiReferenceSample {
         }
     }
 
-    private static void insertVisitAttributesData(GaData gaData, DBCollection collection, Date d) throws JSONException {
+    private static void insertVisitAttributesData(GaData gaData, DBCollection collection, Date d, DBCollection centerMapping) throws JSONException {
         if (gaData.getTotalResults() > 0) {
             System.out.println("Data Table:" + collection);
 
@@ -391,9 +392,30 @@ public class CoreReportingApiReferenceSample {
                     map.put("clientId", clientId);
                     String[] split = pagePath.split("\\?"); // remove all characters after the URL parameters
                     String[] withoutMobileUrl = split[0].split("regus.com");
-                    map.put("pagePath", withoutMobileUrl[withoutMobileUrl.length - 1]);
+                    String strippedPagePath = withoutMobileUrl[withoutMobileUrl.length - 1];
+
+                    String product = "", centerLookUp = "", centerId = "";
+                    String[] locations = strippedPagePath.split("locations/");
+                    if (locations.length > 1) {
+                        int index = locations[1].indexOf("/");
+                        product = locations[1].substring(0, index);
+                        centerLookUp = locations[1].substring(index + 1);
+
+                        HashMap<Object, Object> centerLookUpMap = new HashMap<Object, Object>();
+                        centerLookUpMap.put("CentreURLName", centerLookUp);
+                        BasicDBObject objectToRemove = new BasicDBObject(centerLookUpMap);
+                        DBCursor cursor = centerMapping.find(objectToRemove);
+                        if (cursor.hasNext()) {
+                            centerId = cursor.next().get("CentreID").toString();
+                        }
+
+
+                    }
+                    map.put("pagePath", strippedPagePath);
                     map.put("source", source);
                     map.put("medium", medium);
+                    map.put("product", product);
+                    map.put("centerId", centerId);
 //                    map.put("visits", visits);
 //                    map.put("users", users);
 //                    map.put("pageViews", pageViews);
