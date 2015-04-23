@@ -75,7 +75,7 @@ public class CoreReportingApiReferenceSample {
      */
     private static final java.io.File DATA_STORE_DIR =
             new java.io.File(System.getProperty("user.home"), ".store/analytics_sample");
-    private static final String VISIT_ATTRIBUTES_METRICS = "ga:visits,ga:users,ga:pageviews,ga:sessionDuration";
+    private static final String VISIT_ATTRIBUTES_METRICS = "ga:pageviews,ga:sessionDuration";
     private static final String VISIT_ATTRIBUTES_DIMENSIONS = "ga:dimension11,ga:dimension2,ga:dimension3,ga:pagePath,ga:source,ga:medium";
     private static Date startDate = DateUtils.addDays(new Date(), -1); //new SimpleDateFormat("yyyy-MM-dd").format(DateUtils.addDays(new Date(), -1));
     private static Date endDate = DateUtils.addDays(new Date(), -1);
@@ -380,8 +380,8 @@ public class CoreReportingApiReferenceSample {
                     String pagePath = rowValues.get(columnLookUp.get("ga:pagePath"));
                     String source = rowValues.get(columnLookUp.get("ga:source"));
                     String medium = rowValues.get(columnLookUp.get("ga:medium"));
-                    String visits = rowValues.get(columnLookUp.get("ga:visits"));
-                    String users = rowValues.get(columnLookUp.get("ga:users"));
+//                    String visits = rowValues.get(columnLookUp.get("ga:visits"));
+//                    String users = rowValues.get(columnLookUp.get("ga:users"));
 //                    String pageViews = rowValues.get(columnLookUp.get("ga:pageviews"));
 //                    String sessionDuration = rowValues.get(columnLookUp.get("ga:sessionDuration"));
 
@@ -389,11 +389,13 @@ public class CoreReportingApiReferenceSample {
                     HashMap<Object, Object> map = new HashMap<Object, Object>();
                     map.put("demandbase_sid", demandBaseId);
                     map.put("clientId", clientId);
-                    map.put("pagePath", pagePath);
+                    String[] split = pagePath.split("\\?"); // remove all characters after the URL parameters
+                    String[] withoutMobileUrl = split[0].split("regus.com");
+                    map.put("pagePath", withoutMobileUrl[withoutMobileUrl.length - 1]);
                     map.put("source", source);
                     map.put("medium", medium);
-                    map.put("visits", visits);
-                    map.put("users", users);
+//                    map.put("visits", visits);
+//                    map.put("users", users);
 //                    map.put("pageViews", pageViews);
 //                    map.put("sessionDuration", sessionDuration);
                     map.put("date", new SimpleDateFormat("yyyy/MM/dd").format(d));
