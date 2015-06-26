@@ -66,15 +66,15 @@
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <mainClass>com.google.api.services.samples.analytics.cmdline.CoreReportingApiReferenceSample</mainClass>
-          <systemProperties>
-            <systemProperty>
-              <key>java.util.logging.config.file</key>
-              <value>logging.properties</value>
-            </systemProperty>
-          </systemProperties>
-        </configuration>
+        <!--<configuration>-->
+          <!--<mainClass>com.google.api.services.samples.analytics.cmdline.CoreReportingApiReferenceSample</mainClass>-->
+          <!--<systemProperties>-->
+            <!--<systemProperty>-->
+              <!--<key>java.util.logging.config.file</key>-->
+              <!--<value>logging.properties</value>-->
+            <!--</systemProperty>-->
+          <!--</systemProperties>-->
+        <!--</configuration>-->
       </plugin>
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
