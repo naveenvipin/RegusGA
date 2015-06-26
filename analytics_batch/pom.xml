@@ -141,7 +141,11 @@
       <artifactId>commons-lang3</artifactId>
       <version>3.0</version>
     </dependency>
-
+    <dependency>
+      <groupId>javax.mail</groupId>
+      <artifactId>mail</artifactId>
+      <version>1.4</version>
+    </dependency>
   </dependencies>
   <properties>
     <project.http.version>1.20.0</project.http.version>
