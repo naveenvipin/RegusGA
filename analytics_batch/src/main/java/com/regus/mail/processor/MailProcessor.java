@@ -75,7 +75,6 @@ public class MailProcessor {
                 formValues.put("product", product);
                 formValues.put("country", country);
                 final String lines[] = cont.split("\n");
-                System.out.println("Total number of non blank lines " + lines.length);
 
                 for (String line : lines) {
                     if (line.length() > 0 && line.contains(":") && !line.startsWith("NOTE TO")) {
@@ -88,8 +87,6 @@ public class MailProcessor {
                             formValues.put("urlParameters", reqParameters);
                         } else {
                             String nameValue[] = line.split(":");
-                            System.out.println("Name :" + nameValue[0]);
-                            System.out.println("Value :" + nameValue[1]);
                             formValues.put(nameValue[0], nameValue[1]);
                         }
                     }
@@ -103,10 +100,9 @@ public class MailProcessor {
                 Message[] msgs = {msg};
                 formFolder.copyMessages(msgs, processedFolder);
                 msg.setFlag(Flags.Flag.DELETED, true);
-
             }
 
-            formFolder.close(false);
+            formFolder.close(true);
             store.close();
         } catch (Exception mex) {
             mex.printStackTrace();
