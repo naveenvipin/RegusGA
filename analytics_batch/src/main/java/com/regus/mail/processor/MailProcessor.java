@@ -21,6 +21,7 @@ public class MailProcessor {
 
         Store store = null;
         Folder formFolder = null;
+        Folder processedFolder = null;
         try {
             Session session = getSession();
             store = session.getStore("imap");
@@ -29,7 +30,7 @@ public class MailProcessor {
             store.connect(mailCredentials.getProperty("host"), mailCredentials.getProperty("user"), mailCredentials.getProperty("password"));
             formFolder = store.getFolder("INBOX/Form Fills/To Process");
             formFolder.open(Folder.READ_WRITE);
-            Folder processedFolder = store.getFolder("INBOX/Form Fills/Processed");
+            processedFolder = store.getFolder("INBOX/Form Fills/Processed");
             System.out.println(formFolder.getMessageCount());
             processMessages(formFolder, processedFolder);
 
@@ -41,6 +42,9 @@ public class MailProcessor {
             }
             if (store != null) {
                 store.close();
+            }
+            if (processedFolder != null) {
+                processedFolder.close(true);
             }
         }
     }
